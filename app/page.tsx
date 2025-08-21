@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, KeyboardEvent } from "react";
+import { useEffect, useState, KeyboardEvent } from "react";
 import Image from "next/image";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -145,7 +145,6 @@ export default function DaftarPage() {
   const [step, setStep] = useState<"welcome" | "form" | "success">("welcome");
   const [createdName, setCreatedName] = useState<string>("");
 
-  const nameRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -154,6 +153,7 @@ export default function DaftarPage() {
     formState: { errors },
     setValue,
     watch,
+    setFocus
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -166,16 +166,27 @@ export default function DaftarPage() {
     mode: "onTouched",
   });
 
-  const selectedFakultas = watch("fakultas") as Fakultas | undefined;
-  const selectedJurusan = watch("jurusan") as Jurusan | undefined;
+    const rawFak = watch("fakultas");
+  const selectedFakultas: Fakultas | undefined = (FACULTIES as readonly string[]).includes(
+    rawFak
+  )
+    ? (rawFak as Fakultas)
+    : undefined;
+
   const jurusanOptions = selectedFakultas ? MAJORS_BY_FACULTY[selectedFakultas] : [];
+  const rawJur = watch("jurusan");
+  const selectedJurusan: Jurusan | undefined = (jurusanOptions as readonly string[]).includes(
+    rawJur
+  )
+    ? (rawJur as Jurusan)
+    : undefined;
 
   useEffect(() => {
     if (step === "form") {
-      const t = setTimeout(() => nameRef.current?.focus(), 250);
+      const t = setTimeout(() => setFocus("nama"), 250);
       return () => clearTimeout(t);
     }
-  }, [step]);
+  }, [step, setFocus]);
 
   const onSubmit = async (values: FormValues) => {
     setSubmitting(true);
@@ -387,7 +398,6 @@ export default function DaftarPage() {
                         <span className="text-[11px] text-rose-700">Wajib</span>
                       </div>
                       <Input
-                        ref={nameRef}
                         id="nama"
                         placeholder="Contoh: Budi Santoso"
                         autoComplete="name"
