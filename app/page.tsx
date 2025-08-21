@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useRef, useState, KeyboardEvent } from "react";
@@ -85,17 +84,17 @@ const FormSchema = z
     no_hp: z
       .string()
       .regex(phoneRegex, "Nomor HP harus diawali 0 atau +62 dan minimal 9 digit"),
-    fakultas: z.enum(FACULTIES, { errorMap: () => ({ message: "Pilih fakultas" }) }),
+    fakultas: z.enum(FACULTIES, { required_error: "Pilih fakultas" }),
     jurusan: z.string({ required_error: "Pilih jurusan" }),
     waktu_kuliah: z.enum(WAKTU_KULIAH).optional(),
   })
   .superRefine((val, ctx) => {
     const allowed = MAJORS_BY_FACULTY[val.fakultas as Fakultas] as readonly string[];
-    if (!val.jurusan || !allowed?.includes(val.jurusan)) {
+    if (!val.jurusan || !allowed.includes(val.jurusan)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Pilih jurusan sesuai fakultas",
-        path: ["jurusan"],
+        path: ["jurusan"],  
       });
     }
   });
