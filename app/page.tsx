@@ -84,17 +84,27 @@ const FormSchema = z
     no_hp: z
       .string()
       .regex(phoneRegex, "Nomor HP harus diawali 0 atau +62 dan minimal 9 digit"),
-    fakultas: z.enum(FACULTIES, { required_error: "Pilih fakultas" }),
-    jurusan: z.string({ required_error: "Pilih jurusan" }),
+
+    // gunakan string + refine agar pesan error bisa dikontrol dengan aman
+    fakultas: z
+      .string()
+      .refine((v): v is Fakultas => (FACULTIES as readonly string[]).includes(v), {
+        message: "Pilih fakultas",
+      }),
+
+    // pakai min(1) ketimbang { required_error: ... } untuk kompatibilitas
+    jurusan: z.string().min(1, "Pilih jurusan"),
+
+    // enum tanpa argumen tambahan, lalu optional
     waktu_kuliah: z.enum(WAKTU_KULIAH).optional(),
   })
   .superRefine((val, ctx) => {
-    const allowed = MAJORS_BY_FACULTY[val.fakultas as Fakultas] as readonly string[];
-    if (!val.jurusan || !allowed.includes(val.jurusan)) {
+    const allowed = MAJORS_BY_FACULTY[val.fakultas as Fakultas] as readonly string[] | undefined;
+    if (!allowed || !val.jurusan || !allowed.includes(val.jurusan)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Pilih jurusan sesuai fakultas",
-        path: ["jurusan"],  
+        path: ["jurusan"],
       });
     }
   });
@@ -202,11 +212,7 @@ export default function DaftarPage() {
           });
           return;
         }
-        if (
-          error.message?.toLowerCase().includes("row-level security") ||
-          error.code === "42501" ||
-          (error as any).status === 403
-        ) {
+        if (error.code === "42501" || /row-level security/i.test(error.message)) {
           toast.error("Akses ditolak", {
             description: "Aktifkan policy INSERT untuk anon pada tabel mahasiswa.",
           });
@@ -232,7 +238,9 @@ export default function DaftarPage() {
           text: `Yuk gabung ke grup WhatsApp ${ORG_NAME}!`,
           url: WA_GROUP_LINK,
         });
-      } catch {}
+      } catch {
+        /* user cancelled */
+      }
     } else {
       await navigator.clipboard.writeText(WA_GROUP_LINK);
       toast("Tautan disalin", { description: "Link grup disalin ke clipboard." });
@@ -404,14 +412,13 @@ export default function DaftarPage() {
                         </Label>
                         <span className="text-[11px] text-rose-700">Wajib</span>
                       </div>
-                        <Input
-                          id="no_hp"
-                          inputMode="tel"
-                          placeholder="+62 812 3456 7890"
-                          aria-invalid={!!errors.no_hp}
-                          {...register("no_hp")}
-                          className=""
-                        />
+                      <Input
+                        id="no_hp"
+                        inputMode="tel"
+                        placeholder="+62 812 3456 7890"
+                        aria-invalid={!!errors.no_hp}
+                        {...register("no_hp")}
+                      />
                       {errors.no_hp ? (
                         <p className="text-sm text-destructive">{errors.no_hp.message}</p>
                       ) : (
