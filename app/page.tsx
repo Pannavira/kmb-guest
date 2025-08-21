@@ -347,7 +347,7 @@ export default function DaftarPage() {
                   <h1 className="text-[28px] leading-8 font-semibold mt-6 text-slate-900">
                     Selamat Datang di {ORG_NAME}
                   </h1>
-                  <p className="text-[13px] text-slate-600 mt-2">
+                  <p className="text-[13px] text-slate-600 mt-8 mb-16">
                     Tap di mana saja untuk melanjutkan
                   </p>
 
