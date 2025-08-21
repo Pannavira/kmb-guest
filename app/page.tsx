@@ -18,6 +18,7 @@ import {
   Share2,
   MessageSquare,
   ChevronDown,
+  MessagesSquare,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,7 +38,7 @@ import { Toaster, toast } from "sonner";
 // CONFIG
 // —————————————————————————————————————————————
 const ORG_NAME = "KMB Jaya Mangala";
-const WA_GROUP_LINK = "https://chat.whatsapp.com/REPLACE_ME";
+const WA_GROUP_LINK = "https://chat.whatsapp.com/HuuSMFOf6TIFOAAcpnuIH9?mode=ac_t";
 const PRIMARY = "bg-rose-700 hover:bg-rose-800";
 
 // —————————————————————————————————————————————
@@ -295,7 +296,7 @@ export default function DaftarPage() {
     if (e.key === "Enter" || e.key === " ") setStep("form");
   };
 
-  const fabBottomClass = step === "form" ? "bottom-20" : "bottom-5";
+  const fabBottomClass = step === "form" ? "bottom-25" : "bottom-25";
 
   return (
     <>
@@ -347,11 +348,8 @@ export default function DaftarPage() {
                   <h1 className="text-[28px] leading-8 font-semibold mt-6 text-slate-900">
                     Selamat Datang di {ORG_NAME}
                   </h1>
-                  <p className="text-[13px] text-slate-600 mt-8 mb-16">
-                    Tap di mana saja untuk melanjutkan
-                  </p>
 
-                  <blockquote className="mt-6 text-[15px] leading-relaxed text-slate-700 italic max-w-sm mx-auto">
+                  <blockquote className="text-[15px] leading-relaxed text-slate-700 italic max-w-sm mx-auto mt-8 mb-16">
                     “Tidak berbuat kejahatan, menambah kebajikan, memurnikan
                     hati—itulah ajaran para Buddha.”
                     <span className="not-italic text-slate-500">
@@ -361,25 +359,25 @@ export default function DaftarPage() {
                   </blockquote>
 
                   <div className="flex flex-col items-center">
-                  <div className="text-slate-500 animate-bounce">
-                    <ChevronDown className="w-6 h-6" />
+                    <div className="text-slate-500 animate-bounce">
+                      <ChevronDown className="w-6 h-6" />
+                    </div>
+                    <Button
+                      className={`mt-3 rounded-xl h-11 px-5 ${PRIMARY}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setStep("form");
+                      }}
+                    >
+                      Mulai Pendaftaran
+                    </Button>
                   </div>
-                  <Button
-                    className={`mt-3 rounded-xl h-11 px-5 ${PRIMARY}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setStep("form");
-                    }}
-                  >
-                    Mulai Pendaftaran
-                  </Button>
-                </div>
-
-
+                  <p className="text-[13px] text-slate-600 mt-3 mb-8">
+                    *Tap di mana saja untuk melanjutkan
+                  </p>
                 </div>
 
                 {/* Hint to continue (tiny motion only) */}
-                
               </motion.div>
             )}
 
@@ -396,20 +394,11 @@ export default function DaftarPage() {
                 <header className="mb-4 text-center">
                   <BrandChip />
                   <h1 className="text-[22px] font-semibold tracking-tight text-rose-900 mt-3">
-                    Form Pendaftaran Anggota
+                    Form Pendaftaran
                   </h1>
-                  <p className="text-[13px] text-slate-600 mt-1">
-                    Isi data berikut secara singkat. Data dipakai untuk
-                    keperluan internal {ORG_NAME}.
-                  </p>
                 </header>
 
                 <Card className="shadow-xl rounded-2xl border border-slate-200 bg-white">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-[16px] text-amber-800">
-                      Data Mahasiswa
-                    </CardTitle>
-                  </CardHeader>
                   <CardContent className="space-y-5">
                     {/* Nama */}
                     <div className="space-y-2">
@@ -633,28 +622,6 @@ export default function DaftarPage() {
                         Buka WhatsApp Group
                       </a>
                     </Button>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        variant="outline"
-                        className="h-12 rounded-xl"
-                        onClick={tryShare}
-                      >
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Bagikan Link
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="h-12 rounded-xl"
-                        onClick={async () => {
-                          await navigator.clipboard.writeText(WA_GROUP_LINK);
-                          toast("Tautan disalin");
-                        }}
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Salin Link
-                      </Button>
-                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -695,13 +662,6 @@ export default function DaftarPage() {
                 Join WhatsApp
               </a>
             </Button>
-            <Button
-              variant="secondary"
-              className="h-12 rounded-xl"
-              onClick={tryShare}
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       )}
@@ -714,7 +674,7 @@ export default function DaftarPage() {
         aria-label="Gabung Grup WhatsApp"
         className={`fixed right-5 z-50 inline-flex items-center justify-center w-14 h-14 rounded-full shadow-lg bg-green-500 hover:bg-green-600 active:scale-95 transition ${fabBottomClass}`}
       >
-        <WhatsAppIcon className="w-7 h-7 text-white" />
+        <MessagesSquare className="w-7 h-7 text-white" />
       </a>
 
       <Toaster position="top-center" />
