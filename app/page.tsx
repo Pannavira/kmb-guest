@@ -43,8 +43,12 @@ const PRIMARY = "bg-rose-700 hover:bg-rose-800";
 // —————————————————————————————————————————————
 // Fakultas & Jurusan (dependent)
 // —————————————————————————————————————————————
-const FACULTIES = ["Sains & Teknologi", "Sosial & Humaniora", "Bisnis"] as const;
-type Fakultas = typeof FACULTIES[number];
+const FACULTIES = [
+  "Sains & Teknologi",
+  "Sosial & Humaniora",
+  "Bisnis",
+] as const;
+type Fakultas = (typeof FACULTIES)[number];
 
 const MAJORS_SAINTEK = [
   "Teknik Informatika",
@@ -53,8 +57,16 @@ const MAJORS_SAINTEK = [
   "Teknik Perangkat Lunak",
   "Teknik Elektro",
 ] as const;
-const MAJORS_SOSHUM = ["Ilmu Komunikasi", "Sastra Inggris", "Bahasa Inggris"] as const;
-const MAJORS_BISNIS = ["Akuntansi", "Manajemen", "Administrasi Bisnis"] as const;
+const MAJORS_SOSHUM = [
+  "Ilmu Komunikasi",
+  "Sastra Inggris",
+  "Bahasa Inggris",
+] as const;
+const MAJORS_BISNIS = [
+  "Akuntansi",
+  "Manajemen",
+  "Administrasi Bisnis",
+] as const;
 
 const MAJORS_BY_FACULTY = {
   "Sains & Teknologi": MAJORS_SAINTEK,
@@ -68,7 +80,7 @@ type Jurusan =
   | (typeof MAJORS_BISNIS)[number];
 
 const WAKTU_KULIAH = ["Pagi", "Malam"] as const;
-type WaktuKuliah = typeof WAKTU_KULIAH[number];
+type WaktuKuliah = (typeof WAKTU_KULIAH)[number];
 
 // —————————————————————————————————————————————
 // VALIDATION (Zod version–safe, no extra params to enum/string)
@@ -80,12 +92,18 @@ const FormSchema = z
     nama: z.string().min(2, "Nama minimal 2 karakter"),
     no_hp: z
       .string()
-      .regex(phoneRegex, "Nomor HP harus diawali 0 atau +62 dan minimal 9 digit"),
+      .regex(
+        phoneRegex,
+        "Nomor HP harus diawali 0 atau +62 dan minimal 9 digit"
+      ),
     fakultas: z
       .string()
-      .refine((v): v is Fakultas => (FACULTIES as readonly string[]).includes(v), {
-        message: "Pilih fakultas",
-      }),
+      .refine(
+        (v): v is Fakultas => (FACULTIES as readonly string[]).includes(v),
+        {
+          message: "Pilih fakultas",
+        }
+      ),
     jurusan: z.string().min(1, "Pilih jurusan"),
     waktu_kuliah: z.enum(WAKTU_KULIAH).optional(),
   })
@@ -164,17 +182,19 @@ export default function DaftarPage() {
 
   // derive state for selects
   const rawFak = watch("fakultas");
-  const selectedFakultas: Fakultas | undefined = (FACULTIES as readonly string[]).includes(
-    rawFak
-  )
+  const selectedFakultas: Fakultas | undefined = (
+    FACULTIES as readonly string[]
+  ).includes(rawFak)
     ? (rawFak as Fakultas)
     : undefined;
 
-  const jurusanOptions = selectedFakultas ? MAJORS_BY_FACULTY[selectedFakultas] : [];
+  const jurusanOptions = selectedFakultas
+    ? MAJORS_BY_FACULTY[selectedFakultas]
+    : [];
   const rawJur = watch("jurusan");
-  const selectedJurusan: Jurusan | undefined = (jurusanOptions as readonly string[]).includes(
-    rawJur
-  )
+  const selectedJurusan: Jurusan | undefined = (
+    jurusanOptions as readonly string[]
+  ).includes(rawJur)
     ? (rawJur as Jurusan)
     : undefined;
 
@@ -207,32 +227,46 @@ export default function DaftarPage() {
 
       if (error) {
         if (error.code === "23505") {
-          setError("no_hp", { type: "manual", message: "Nomor HP ini sudah terdaftar." });
+          setError("no_hp", {
+            type: "manual",
+            message: "Nomor HP ini sudah terdaftar.",
+          });
           toast.error("Nomor sudah terdaftar", {
             description: "Silakan gunakan nomor lain atau hubungi panitia.",
           });
           return;
         }
         if (error.code === "23514") {
-          setError("no_hp", { type: "manual", message: "Format nomor HP tidak valid." });
+          setError("no_hp", {
+            type: "manual",
+            message: "Format nomor HP tidak valid.",
+          });
           toast.error("Format nomor tidak valid", {
             description: "Gunakan format 08… atau +62…",
           });
           return;
         }
-        if (error.code === "42501" || /row-level security/i.test(error.message)) {
+        if (
+          error.code === "42501" ||
+          /row-level security/i.test(error.message)
+        ) {
           toast.error("Akses ditolak", {
-            description: "Aktifkan policy INSERT untuk anon pada tabel mahasiswa.",
+            description:
+              "Aktifkan policy INSERT untuk anon pada tabel mahasiswa.",
           });
           return;
         }
-        toast.error("Gagal menyimpan", { description: error.message || "Terjadi kesalahan." });
+        toast.error("Gagal menyimpan", {
+          description: error.message || "Terjadi kesalahan.",
+        });
         return;
       }
 
       setCreatedName(data?.nama ?? values.nama);
       setStep("success");
-      toast.success("Pendaftaran berhasil 🎉", { description: `Selamat datang di ${ORG_NAME}!` });
+      toast.success("Pendaftaran berhasil 🎉", {
+        description: `Selamat datang di ${ORG_NAME}!`,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -251,7 +285,9 @@ export default function DaftarPage() {
       }
     } else {
       await navigator.clipboard.writeText(WA_GROUP_LINK);
-      toast("Tautan disalin", { description: "Link grup disalin ke clipboard." });
+      toast("Tautan disalin", {
+        description: "Link grup disalin ke clipboard.",
+      });
     }
   };
 
@@ -294,33 +330,37 @@ export default function DaftarPage() {
                 tabIndex={0}
               >
                 {/* Top branding */}
-                <div className="flex flex-col items-center">
-                  <Image
-                    src="/kmb-logo.png"
-                    alt={`${ORG_NAME} Logo`}
-                    width={96}
-                    height={96}
-                    priority={false}
-                    className="drop-shadow-sm"
-                  />
-                  <BrandChip />
-                </div>
 
                 {/* Welcome text */}
                 <div className="px-2">
+                  <div className="flex flex-col items-center">
+                    <Image
+                      src="/kmb-logo.png"
+                      alt={`${ORG_NAME} Logo`}
+                      width={96}
+                      height={96}
+                      priority={false}
+                      className="drop-shadow-sm"
+                    />
+                  </div>
+
                   <h1 className="text-[28px] leading-8 font-semibold mt-6 text-slate-900">
                     Selamat Datang di {ORG_NAME}
                   </h1>
-                  <p className="text-[13px] text-slate-600 mt-2">Ketuk di mana saja untuk melanjutkan</p>
+                  <p className="text-[13px] text-slate-600 mt-2">
+                    Tap di mana saja untuk melanjutkan
+                  </p>
 
                   <blockquote className="mt-6 text-[15px] leading-relaxed text-slate-700 italic max-w-sm mx-auto">
-                    “Tidak berbuat kejahatan, menambah kebajikan, memurnikan hati—itulah ajaran para Buddha.”
-                    <span className="not-italic text-slate-500"> — Dhammapada 183</span>
+                    “Tidak berbuat kejahatan, menambah kebajikan, memurnikan
+                    hati—itulah ajaran para Buddha.”
+                    <span className="not-italic text-slate-500">
+                      {" "}
+                      — Dhammapada 183
+                    </span>
                   </blockquote>
-                </div>
 
-                {/* Hint to continue (tiny motion only) */}
-                <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center">
                   <div className="text-slate-500 animate-bounce">
                     <ChevronDown className="w-6 h-6" />
                   </div>
@@ -334,6 +374,12 @@ export default function DaftarPage() {
                     Mulai Pendaftaran
                   </Button>
                 </div>
+
+
+                </div>
+
+                {/* Hint to continue (tiny motion only) */}
+                
               </motion.div>
             )}
 
@@ -353,19 +399,25 @@ export default function DaftarPage() {
                     Form Pendaftaran Anggota
                   </h1>
                   <p className="text-[13px] text-slate-600 mt-1">
-                    Isi data berikut secara singkat. Data dipakai untuk keperluan internal {ORG_NAME}.
+                    Isi data berikut secara singkat. Data dipakai untuk
+                    keperluan internal {ORG_NAME}.
                   </p>
                 </header>
 
                 <Card className="shadow-xl rounded-2xl border border-slate-200 bg-white">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-[16px] text-amber-800">Data Mahasiswa</CardTitle>
+                    <CardTitle className="text-[16px] text-amber-800">
+                      Data Mahasiswa
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-5">
                     {/* Nama */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="nama" className="flex items-center gap-2">
+                        <Label
+                          htmlFor="nama"
+                          className="flex items-center gap-2"
+                        >
                           <User className="w-4 h-4" />
                           Nama Lengkap
                         </Label>
@@ -381,16 +433,23 @@ export default function DaftarPage() {
                         {...register("nama")}
                       />
                       {errors.nama ? (
-                        <p className="text-sm text-destructive">{errors.nama.message}</p>
+                        <p className="text-sm text-destructive">
+                          {errors.nama.message}
+                        </p>
                       ) : (
-                        <p className="text-[11px] text-slate-500">Gunakan nama lengkap sesuai identitas.</p>
+                        <p className="text-[11px] text-slate-500">
+                          Gunakan nama lengkap sesuai identitas.
+                        </p>
                       )}
                     </div>
 
                     {/* No HP */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="no_hp" className="flex items-center gap-2">
+                        <Label
+                          htmlFor="no_hp"
+                          className="flex items-center gap-2"
+                        >
                           <Phone className="w-4 h-4" />
                           Nomor WhatsApp
                         </Label>
@@ -404,10 +463,13 @@ export default function DaftarPage() {
                         {...register("no_hp")}
                       />
                       {errors.no_hp ? (
-                        <p className="text-sm text-destructive">{errors.no_hp.message}</p>
+                        <p className="text-sm text-destructive">
+                          {errors.no_hp.message}
+                        </p>
                       ) : (
                         <p className="text-[11px] text-slate-500">
-                          Awali dengan <span className="font-mono">08…</span> atau <span className="font-mono">+62…</span>.
+                          Awali dengan <span className="font-mono">08…</span>{" "}
+                          atau <span className="font-mono">+62…</span>.
                         </p>
                       )}
                     </div>
@@ -424,8 +486,14 @@ export default function DaftarPage() {
                       <Select
                         value={selectedFakultas || undefined}
                         onValueChange={(v) => {
-                          setValue("fakultas", v as Fakultas, { shouldValidate: true, shouldDirty: true });
-                          setValue("jurusan", "", { shouldValidate: true, shouldDirty: true });
+                          setValue("fakultas", v as Fakultas, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                          setValue("jurusan", "", {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
                         }}
                       >
                         <SelectTrigger className="h-12 rounded-xl">
@@ -439,7 +507,11 @@ export default function DaftarPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.fakultas && <p className="text-sm text-destructive">{errors.fakultas.message}</p>}
+                      {errors.fakultas && (
+                        <p className="text-sm text-destructive">
+                          {errors.fakultas.message}
+                        </p>
+                      )}
                     </div>
 
                     {/* Jurusan */}
@@ -451,10 +523,20 @@ export default function DaftarPage() {
                       <Select
                         disabled={!selectedFakultas}
                         value={selectedJurusan || undefined}
-                        onValueChange={(v) => setValue("jurusan", v as Jurusan, { shouldValidate: true })}
+                        onValueChange={(v) =>
+                          setValue("jurusan", v as Jurusan, {
+                            shouldValidate: true,
+                          })
+                        }
                       >
                         <SelectTrigger className="h-12 rounded-xl">
-                          <SelectValue placeholder={selectedFakultas ? "Pilih jurusan" : "Pilih fakultas dulu"} />
+                          <SelectValue
+                            placeholder={
+                              selectedFakultas
+                                ? "Pilih jurusan"
+                                : "Pilih fakultas dulu"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {jurusanOptions.map((j) => (
@@ -464,7 +546,11 @@ export default function DaftarPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.jurusan && <p className="text-sm text-destructive">{errors.jurusan.message}</p>}
+                      {errors.jurusan && (
+                        <p className="text-sm text-destructive">
+                          {errors.jurusan.message}
+                        </p>
+                      )}
                     </div>
 
                     {/* Waktu Kuliah (opsional) */}
@@ -473,7 +559,13 @@ export default function DaftarPage() {
                         <Clock className="w-4 h-4" />
                         Waktu Kuliah (opsional)
                       </Label>
-                      <Select onValueChange={(v) => setValue("waktu_kuliah", v as WaktuKuliah, { shouldValidate: true })}>
+                      <Select
+                        onValueChange={(v) =>
+                          setValue("waktu_kuliah", v as WaktuKuliah, {
+                            shouldValidate: true,
+                          })
+                        }
+                      >
                         <SelectTrigger className="h-12 rounded-xl">
                           <SelectValue placeholder="Pilih waktu kuliah" />
                         </SelectTrigger>
@@ -485,7 +577,9 @@ export default function DaftarPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <p className="text-[11px] text-slate-500">Boleh dikosongkan bila belum pasti.</p>
+                      <p className="text-[11px] text-slate-500">
+                        Boleh dikosongkan bila belum pasti.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -507,10 +601,15 @@ export default function DaftarPage() {
                   <div className="mx-auto mt-4 w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center">
                     <CheckCircle2 className="w-8 h-8 text-amber-900" />
                   </div>
-                  <h2 className="mt-3 text-2xl font-semibold text-rose-900">Pendaftaran Berhasil</h2>
+                  <h2 className="mt-3 text-2xl font-semibold text-rose-900">
+                    Pendaftaran Berhasil
+                  </h2>
                   <p className="text-sm text-slate-600 mt-1">
-                    {createdName ? `Terima kasih, ${createdName}! ` : "Terima kasih! "}
-                    Selamat bergabung di {ORG_NAME}. Semoga damai dan sejahtera 🌿
+                    {createdName
+                      ? `Terima kasih, ${createdName}! `
+                      : "Terima kasih! "}
+                    Selamat bergabung di {ORG_NAME}. Semoga damai dan sejahtera
+                    🌿
                   </p>
                 </header>
 
@@ -522,14 +621,25 @@ export default function DaftarPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <Button className={`w-full h-12 rounded-xl ${PRIMARY}`} asChild>
-                      <a href={WA_GROUP_LINK} target="_blank" rel="noopener noreferrer">
+                    <Button
+                      className={`w-full h-12 rounded-xl ${PRIMARY}`}
+                      asChild
+                    >
+                      <a
+                        href={WA_GROUP_LINK}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         Buka WhatsApp Group
                       </a>
                     </Button>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <Button variant="outline" className="h-12 rounded-xl" onClick={tryShare}>
+                      <Button
+                        variant="outline"
+                        className="h-12 rounded-xl"
+                        onClick={tryShare}
+                      >
                         <Share2 className="w-4 h-4 mr-2" />
                         Bagikan Link
                       </Button>
@@ -557,10 +667,15 @@ export default function DaftarPage() {
       {step === "form" && (
         <div
           className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+          style={{
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+          }}
         >
           <div className="mx-auto max-w-md flex items-center gap-3">
-            <Button className={`flex-1 h-12 rounded-xl ${PRIMARY}`} onClick={handleSubmit(onSubmit)}>
+            <Button
+              className={`flex-1 h-12 rounded-xl ${PRIMARY}`}
+              onClick={handleSubmit(onSubmit)}
+            >
               Daftar Sekarang
             </Button>
           </div>
@@ -570,7 +685,9 @@ export default function DaftarPage() {
       {step === "success" && (
         <div
           className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+          style={{
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+          }}
         >
           <div className="mx-auto max-w-md flex items-center gap-3">
             <Button className={`flex-1 h-12 rounded-xl ${PRIMARY}`} asChild>
@@ -578,7 +695,11 @@ export default function DaftarPage() {
                 Join WhatsApp
               </a>
             </Button>
-            <Button variant="secondary" className="h-12 rounded-xl" onClick={tryShare}>
+            <Button
+              variant="secondary"
+              className="h-12 rounded-xl"
+              onClick={tryShare}
+            >
               <Share2 className="w-4 h-4" />
             </Button>
           </div>
