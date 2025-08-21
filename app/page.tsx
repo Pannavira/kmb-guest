@@ -296,7 +296,7 @@ export default function DaftarPage() {
     if (e.key === "Enter" || e.key === " ") setStep("form");
   };
 
-  const fabBottomClass = step === "form" ? "bottom-25" : "bottom-25";
+  const fabBottomClass = step === "form" || step === "success" ? "bottom-25" : "bottom-5";
 
   return (
     <>
