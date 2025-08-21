@@ -38,8 +38,6 @@ import { Toaster, toast } from "sonner";
 // —————————————————————————————————————————————
 const ORG_NAME = "KMB Jaya Mangala";
 const WA_GROUP_LINK = "https://chat.whatsapp.com/REPLACE_ME";
-
-// Palet dari logo (rose/red utama, amber sekunder)
 const PRIMARY = "bg-rose-700 hover:bg-rose-800";
 
 // —————————————————————————————————————————————
@@ -61,7 +59,7 @@ const MAJORS_BISNIS = ["Akuntansi", "Manajemen", "Administrasi Bisnis"] as const
 const MAJORS_BY_FACULTY = {
   "Sains & Teknologi": MAJORS_SAINTEK,
   "Sosial & Humaniora": MAJORS_SOSHUM,
-  "Bisnis": MAJORS_BISNIS,
+  Bisnis: MAJORS_BISNIS,
 } as const;
 
 type Jurusan =
@@ -69,12 +67,11 @@ type Jurusan =
   | (typeof MAJORS_SOSHUM)[number]
   | (typeof MAJORS_BISNIS)[number];
 
-// Waktu Kuliah (opsional)
 const WAKTU_KULIAH = ["Pagi", "Malam"] as const;
 type WaktuKuliah = typeof WAKTU_KULIAH[number];
 
 // —————————————————————————————————————————————
-// VALIDATION
+// VALIDATION (Zod version–safe, no extra params to enum/string)
 // —————————————————————————————————————————————
 const phoneRegex = /^(0|\+62)[0-9]{8,}$/;
 
@@ -84,22 +81,18 @@ const FormSchema = z
     no_hp: z
       .string()
       .regex(phoneRegex, "Nomor HP harus diawali 0 atau +62 dan minimal 9 digit"),
-
-    // gunakan string + refine agar pesan error bisa dikontrol dengan aman
     fakultas: z
       .string()
       .refine((v): v is Fakultas => (FACULTIES as readonly string[]).includes(v), {
         message: "Pilih fakultas",
       }),
-
-    // pakai min(1) ketimbang { required_error: ... } untuk kompatibilitas
     jurusan: z.string().min(1, "Pilih jurusan"),
-
-    // enum tanpa argumen tambahan, lalu optional
     waktu_kuliah: z.enum(WAKTU_KULIAH).optional(),
   })
   .superRefine((val, ctx) => {
-    const allowed = MAJORS_BY_FACULTY[val.fakultas as Fakultas] as readonly string[] | undefined;
+    const allowed = MAJORS_BY_FACULTY[val.fakultas as Fakultas] as
+      | readonly string[]
+      | undefined;
     if (!allowed || !val.jurusan || !allowed.includes(val.jurusan)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -111,14 +104,13 @@ const FormSchema = z
 
 type FormValues = z.infer<typeof FormSchema>;
 
-// Normalize: "08xxxxxxxxx" -> "+628xxxxxxxxx"
 function normalizePhone(input: string) {
   const v = input.replace(/\s+/g, "");
   if (v.startsWith("0")) return "+62" + v.slice(1);
   return v;
 }
 
-// WhatsApp icon (brand)
+// WhatsApp icon
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 32 32" fill="currentColor" {...props}>
@@ -128,12 +120,17 @@ function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-// Brand chip
 function BrandChip() {
   return (
     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200">
       <div className="relative h-5 w-5 overflow-hidden rounded-full ring-1 ring-amber-300">
-        <Image src="/kmb-logo.png" alt="Logo KMB Jaya Mangala" fill sizes="20px" />
+        <Image
+          src="/kmb-logo.png"
+          alt="Logo KMB Jaya Mangala"
+          width={20}
+          height={20}
+          priority={false}
+        />
       </div>
       <span className="text-amber-800 text-xs font-medium">{ORG_NAME}</span>
     </div>
@@ -145,7 +142,6 @@ export default function DaftarPage() {
   const [step, setStep] = useState<"welcome" | "form" | "success">("welcome");
   const [createdName, setCreatedName] = useState<string>("");
 
-
   const {
     register,
     handleSubmit,
@@ -153,20 +149,21 @@ export default function DaftarPage() {
     formState: { errors },
     setValue,
     watch,
-    setFocus
+    setFocus,
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       nama: "",
       no_hp: "",
-      fakultas: undefined,
-      jurusan: undefined,
+      fakultas: "",
+      jurusan: "",
       waktu_kuliah: undefined,
     },
     mode: "onTouched",
   });
 
-    const rawFak = watch("fakultas");
+  // derive state for selects
+  const rawFak = watch("fakultas");
   const selectedFakultas: Fakultas | undefined = (FACULTIES as readonly string[]).includes(
     rawFak
   )
@@ -183,7 +180,7 @@ export default function DaftarPage() {
 
   useEffect(() => {
     if (step === "form") {
-      const t = setTimeout(() => setFocus("nama"), 250);
+      const t = setTimeout(() => setFocus("nama"), 200);
       return () => clearTimeout(t);
     }
   }, [step, setFocus]);
@@ -262,42 +259,26 @@ export default function DaftarPage() {
     if (e.key === "Enter" || e.key === " ") setStep("form");
   };
 
-  // Tailwind: ensure both classes appear for JIT
-  const fabBottomClass = step === "form" ? "bottom-20" : "bottom-5"; // bottom-5 | bottom-20
+  const fabBottomClass = step === "form" ? "bottom-20" : "bottom-5";
 
   return (
     <>
-      {/* Background */}
+      {/* LIGHT background (no big blurs or animated blobs) */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-b from-stone-50 via-slate-50 to-stone-100" />
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(60rem_40rem_at_50%_-10%,rgba(245,158,11,0.08),transparent)]" />
-      <motion.span
-        aria-hidden
-        className="pointer-events-none fixed -top-24 -left-24 w-72 h-72 rounded-full bg-rose-200/30 blur-3xl -z-10"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.span
-        aria-hidden
-        className="pointer-events-none fixed -bottom-24 -right-24 w-80 h-80 rounded-full bg-sky-200/30 blur-3xl -z-10"
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-      />
 
-      {/* Progress bar (hidden on welcome) */}
+      {/* Progress bar (CSS only, no spring) */}
       {step !== "welcome" && (
-        <div className="fixed top-0 left-0 w-full h-1 bg-muted/40 z-40">
-          <motion.div
-            className="h-1 bg-rose-700"
-            initial={{ width: "0%" }}
-            animate={{ width: step === "form" ? "50%" : "100%" }}
-            transition={{ type: "spring", stiffness: 80, damping: 20 }}
+        <div className="fixed top-0 left-0 w-full h-1 bg-slate-200 z-40">
+          <div
+            className="h-1 bg-rose-700 transition-[width] duration-300 ease-out"
+            style={{ width: step === "form" ? "50%" : "100%" }}
           />
         </div>
       )}
 
       <div className="min-h-screen flex items-center justify-center">
         <div className="mx-auto max-w-md w-full px-4">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {/* ——— WELCOME ——— */}
             {step === "welcome" && (
               <motion.div
@@ -306,7 +287,7 @@ export default function DaftarPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.45 }}
+                transition={{ duration: 0.2 }}
                 onClick={() => setStep("form")}
                 onKeyDown={handleWelcomeKey}
                 role="button"
@@ -314,15 +295,14 @@ export default function DaftarPage() {
               >
                 {/* Top branding */}
                 <div className="flex flex-col items-center">
-                  <div className="relative w-24 h-24 mb-4">
-                    <Image
-                      src="/kmb-logo.png"
-                      alt={`${ORG_NAME} Logo`}
-                      fill
-                      sizes="96px"
-                      className="drop-shadow-sm"
-                    />
-                  </div>
+                  <Image
+                    src="/kmb-logo.png"
+                    alt={`${ORG_NAME} Logo`}
+                    width={96}
+                    height={96}
+                    priority={false}
+                    className="drop-shadow-sm"
+                  />
                   <BrandChip />
                 </div>
 
@@ -331,9 +311,7 @@ export default function DaftarPage() {
                   <h1 className="text-[28px] leading-8 font-semibold mt-6 text-slate-900">
                     Selamat Datang di {ORG_NAME}
                   </h1>
-                  <p className="text-[13px] text-slate-600 mt-2">
-                    Ketuk di mana saja untuk melanjutkan
-                  </p>
+                  <p className="text-[13px] text-slate-600 mt-2">Ketuk di mana saja untuk melanjutkan</p>
 
                   <blockquote className="mt-6 text-[15px] leading-relaxed text-slate-700 italic max-w-sm mx-auto">
                     “Tidak berbuat kejahatan, menambah kebajikan, memurnikan hati—itulah ajaran para Buddha.”
@@ -341,15 +319,11 @@ export default function DaftarPage() {
                   </blockquote>
                 </div>
 
-                {/* Hint to continue */}
+                {/* Hint to continue (tiny motion only) */}
                 <div className="flex flex-col items-center">
-                  <motion.div
-                    animate={{ y: [0, 6, 0] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                    className="text-slate-500"
-                  >
+                  <div className="text-slate-500 animate-bounce">
                     <ChevronDown className="w-6 h-6" />
-                  </motion.div>
+                  </div>
                   <Button
                     className={`mt-3 rounded-xl h-11 px-5 ${PRIMARY}`}
                     onClick={(e) => {
@@ -367,10 +341,10 @@ export default function DaftarPage() {
             {step === "form" && (
               <motion.div
                 key="form"
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -14 }}
-                transition={{ duration: 0.25 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
                 className="pb-28"
               >
                 <header className="mb-4 text-center">
@@ -383,7 +357,7 @@ export default function DaftarPage() {
                   </p>
                 </header>
 
-                <Card className="shadow-xl rounded-2xl border-0 bg-white/90">
+                <Card className="shadow-xl rounded-2xl border border-slate-200 bg-white">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-[16px] text-amber-800">Data Mahasiswa</CardTitle>
                   </CardHeader>
@@ -438,7 +412,7 @@ export default function DaftarPage() {
                       )}
                     </div>
 
-                    {/* Fakultas (required) */}
+                    {/* Fakultas */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="flex items-center gap-2">
@@ -451,7 +425,7 @@ export default function DaftarPage() {
                         value={selectedFakultas || undefined}
                         onValueChange={(v) => {
                           setValue("fakultas", v as Fakultas, { shouldValidate: true, shouldDirty: true });
-                          setValue("jurusan", undefined as unknown as string, { shouldValidate: true, shouldDirty: true });
+                          setValue("jurusan", "", { shouldValidate: true, shouldDirty: true });
                         }}
                       >
                         <SelectTrigger className="h-12 rounded-xl">
@@ -468,7 +442,7 @@ export default function DaftarPage() {
                       {errors.fakultas && <p className="text-sm text-destructive">{errors.fakultas.message}</p>}
                     </div>
 
-                    {/* Jurusan (required, depends on Fakultas) */}
+                    {/* Jurusan */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label>Jurusan</Label>
@@ -522,10 +496,10 @@ export default function DaftarPage() {
             {step === "success" && (
               <motion.div
                 key="success"
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -14 }}
-                transition={{ duration: 0.25 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
                 className="pb-28"
               >
                 <header className="mb-6 text-center">
@@ -540,7 +514,7 @@ export default function DaftarPage() {
                   </p>
                 </header>
 
-                <Card className="shadow-xl rounded-2xl border-0">
+                <Card className="shadow-xl rounded-2xl border border-slate-200 bg-white">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2 text-rose-900">
                       <MessageSquare className="w-5 h-5" />
@@ -579,19 +553,15 @@ export default function DaftarPage() {
         </div>
       </div>
 
-      {/* Sticky action bar for mobile (Form & Success) */}
+      {/* Sticky action bars (no backdrop-blur) */}
       {step === "form" && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white/95 backdrop-blur p-3"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
         >
           <div className="mx-auto max-w-md flex items-center gap-3">
-            <Button
-              className={`flex-1 h-12 rounded-xl ${PRIMARY}`}
-              onClick={handleSubmit(onSubmit)}
-              disabled={submitting}
-            >
-              {submitting ? "Menyimpan…" : "Daftar Sekarang"}
+            <Button className={`flex-1 h-12 rounded-xl ${PRIMARY}`} onClick={handleSubmit(onSubmit)}>
+              Daftar Sekarang
             </Button>
           </div>
         </div>
@@ -599,7 +569,7 @@ export default function DaftarPage() {
 
       {step === "success" && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white/95 backdrop-blur p-3"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
         >
           <div className="mx-auto max-w-md flex items-center gap-3">
@@ -615,19 +585,18 @@ export default function DaftarPage() {
         </div>
       )}
 
-      {/* Always-on WhatsApp FAB (naik sedikit saat ada sticky bar) */}
+      {/* Always-on WhatsApp FAB */}
       <a
         href={WA_GROUP_LINK}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Gabung Grup WhatsApp"
-        className={`fixed right-5 z-50 inline-flex items-center justify-center w-14 h-14 rounded-full shadow-lg
-                    bg-green-500 hover:bg-green-600 active:scale-95 transition ${fabBottomClass}`}
+        className={`fixed right-5 z-50 inline-flex items-center justify-center w-14 h-14 rounded-full shadow-lg bg-green-500 hover:bg-green-600 active:scale-95 transition ${fabBottomClass}`}
       >
         <WhatsAppIcon className="w-7 h-7 text-white" />
       </a>
 
-      <Toaster richColors position="top-center" />
+      <Toaster position="top-center" />
     </>
   );
 }
