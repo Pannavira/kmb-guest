@@ -7,10 +7,12 @@ const plusJakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400","600"
 
 
 export const metadata: Metadata = {
-title: "KMB Jaya Mangala — Daftar Tamu",
-description: "Form daftar tamu undangan KMB Jaya Mangala",
+  title: "KMB Jaya Mangala",
+  description: "Form Registrasi Mahasiswa KMB Jaya Mangala",
+  icons: {
+    icon: "/kmb-logo.png"
+  },
 };
-
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 return (
