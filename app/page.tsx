@@ -453,8 +453,7 @@ export default function DaftarPage() {
         <div className="relative rounded-[27px] overflow-hidden bg-gradient-to-br from-rose-50 via-amber-50 to-pink-50">
           {/* top badges */}
           <div className="absolute z-20 top-3 left-3 right-3 flex items-center justify-between">
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-rose-700 shadow">
-              ✨ Kegiatan KMB
+            <span >
             </span>
             <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-600 text-white shadow">
               {slide + 1}/{GALLERY.length}
@@ -499,9 +498,6 @@ export default function DaftarPage() {
 
                 {/* bottom caption */}
                 <div className="absolute z-20 bottom-3 left-3 right-3 flex items-end justify-between">
-                  <div className="text-[11px] text-white/95 bg-black/35 rounded-full px-2 py-1">
-                    Tap untuk lanjut
-                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>
