@@ -159,26 +159,27 @@ function BrandChip() {
 // —————————————————————————————————————————————
 const GALLERY = [
   {
-    src: "/buddhidharma1.jpg",
-    caption: "Welcoming Party",
+    src: "/1.jpg",
+    caption: "",
   },
   {
-    src: "/kmbjayamangala1.jpg",
-    caption: "KMB Hang out",
+    src: "/5.jpg",
+    caption: "",
   },
   {
-    src: "/kmbjayamangala5.jpg",
+    src: "/2.jpg",
     caption: "Kebaktian Bersama",
   },
   {
-    src: "/kmbjayamangala3.jpg",
+    src: "/3.jpg",
     caption: "KMB SPORT",
   },
   {
-    src: "/kmbjayamangala4.jpg",
-    caption: "Keceriaan Komunitas",
+    src: "/4.jpg",
+    caption: "",
   },
-  { src: "/kmbjayamangala2.jpg", caption: "Malam Keakraban" },
+  { src: "/6.jpg", caption: "" },
+  { src: "/7.jpg", caption: "" },
 ];
 
 // —————————————————————————————————————————————
@@ -463,7 +464,7 @@ export default function DaftarPage() {
           {/* SQUARE VIEWPORT (1:1) */}
           <motion.div
             className="relative w-full"
-            style={{ aspectRatio: "1 / 1" }}
+            style={{ aspectRatio: "4 / 5" }}
             whileTap={{ scale: 0.985 }}
           >
             <AnimatePresence mode="wait" initial={false}>
