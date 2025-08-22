@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, KeyboardEvent } from "react";
-import Image from "next/image";
+import NextImage from "next/image";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,11 +14,9 @@ import {
   School,
   Clock,
   CheckCircle2,
-  Copy,
-  Share2,
-  MessageSquare,
   ChevronDown,
   MessagesSquare,
+  Images,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +36,8 @@ import { Toaster, toast } from "sonner";
 // CONFIG
 // —————————————————————————————————————————————
 const ORG_NAME = "KMB Jaya Mangala";
-const WA_GROUP_LINK = "https://chat.whatsapp.com/HuuSMFOf6TIFOAAcpnuIH9?mode=ac_t";
+const WA_GROUP_LINK =
+  "https://chat.whatsapp.com/HuuSMFOf6TIFOAAcpnuIH9?mode=ac_t";
 const PRIMARY = "bg-rose-700 hover:bg-rose-800";
 
 // —————————————————————————————————————————————
@@ -84,9 +83,10 @@ const WAKTU_KULIAH = ["Pagi", "Malam"] as const;
 type WaktuKuliah = (typeof WAKTU_KULIAH)[number];
 
 // —————————————————————————————————————————————
-// VALIDATION (Zod version–safe, no extra params to enum/string)
+// VALIDATION
 // —————————————————————————————————————————————
 const phoneRegex = /^(0|\+62)[0-9]{8,}$/;
+const yyyymmdd = /^\d{4}-\d{2}-\d{2}$/; // HTML date input value
 
 const FormSchema = z
   .object({
@@ -97,6 +97,13 @@ const FormSchema = z
         phoneRegex,
         "Nomor HP harus diawali 0 atau +62 dan minimal 9 digit"
       ),
+    tanggal_lahir: z
+      .string()
+      .regex(yyyymmdd, "Tanggal lahir wajib diisi")
+      .refine((v) => {
+        const d = new Date(v);
+        return !Number.isNaN(d.getTime());
+      }, "Tanggal lahir tidak valid"),
     fakultas: z
       .string()
       .refine(
@@ -129,21 +136,11 @@ function normalizePhone(input: string) {
   return v;
 }
 
-// WhatsApp icon
-function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 32 32" fill="currentColor" {...props}>
-      <path d="M19.11 17.79c-.28-.14-1.67-.82-1.93-.92-.26-.1-.45-.14-.64.14s-.73.92-.9 1.1c-.17.18-.33.2-.61.07-.28-.14-1.2-.44-2.29-1.4-.85-.76-1.43-1.7-1.6-1.98-.17-.28-.02-.43.12-.57.12-.12.28-.32.42-.48.14-.16.18-.28.28-.47.09-.19.05-.35-.02-.49-.07-.14-.64-1.55-.88-2.13-.23-.56-.47-.49-.64-.49h-.55c-.19 0-.49.07-.75.35-.26.28-1 1-1 2.45s1.03 2.84 1.17 3.04c.14.2 2.03 3.1 4.92 4.34.69.3 1.23.48 1.65.62.69.22 1.32.19 1.82.12.56-.08 1.67-.68 1.9-1.34.23-.66.23-1.23.16-1.34-.06-.11-.25-.18-.53-.32z" />
-      <path d="M26.7 5.3A14 14 0 0 0 5.26 26.7L4 28l1.43-.38A14 14 0 1 0 26.7 5.3zM16 27a11 11 0 0 1-5.61-1.54l-.4-.24-3 .8.8-2.93-.26-.43A11 11 0 1 1 27 16 11 11 0 0 1 16 27z" />
-    </svg>
-  );
-}
-
 function BrandChip() {
   return (
     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200">
       <div className="relative h-5 w-5 overflow-hidden rounded-full ring-1 ring-amber-300">
-        <Image
+        <NextImage
           src="/kmb-logo.png"
           alt="Logo KMB Jaya Mangala"
           width={20}
@@ -156,10 +153,44 @@ function BrandChip() {
   );
 }
 
+// —————————————————————————————————————————————
+// GALLERY DATA (placeholders; replace later)
+// Using <img> so you don’t need next/image remote config.
+// —————————————————————————————————————————————
+const GALLERY = [
+  {
+    src: "/buddhidharma1.jpg",
+    caption: "Welcoming Party",
+  },
+  {
+    src: "/kmbjayamangala1.jpg",
+    caption: "KMB Hang out",
+  },
+  {
+    src: "/kmbjayamangala5.jpg",
+    caption: "Kebaktian Bersama",
+  },
+  {
+    src: "/kmbjayamangala3.jpg",
+    caption: "KMB SPORT",
+  },
+  {
+    src: "/kmbjayamangala4.jpg",
+    caption: "Keceriaan Komunitas",
+  },
+  { src: "/kmbjayamangala2.jpg", caption: "Malam Keakraban" },
+];
+
+// —————————————————————————————————————————————
+// COMPONENT
+// —————————————————————————————————————————————
+type Step = "welcome" | "gallery" | "form" | "success";
+
 export default function DaftarPage() {
   const [submitting, setSubmitting] = useState(false);
-  const [step, setStep] = useState<"welcome" | "form" | "success">("welcome");
+  const [step, setStep] = useState<Step>("welcome");
   const [createdName, setCreatedName] = useState<string>("");
+  const [slide, setSlide] = useState(0); // tap-to-advance index
 
   const {
     register,
@@ -174,6 +205,7 @@ export default function DaftarPage() {
     defaultValues: {
       nama: "",
       no_hp: "",
+      tanggal_lahir: "",
       fakultas: "",
       jurusan: "",
       waktu_kuliah: undefined,
@@ -221,6 +253,7 @@ export default function DaftarPage() {
             fakultas: values.fakultas,
             jurusan: values.jurusan,
             waktu_kuliah: values.waktu_kuliah ?? null,
+            tanggal_lahir: values.tanggal_lahir,
           },
         ])
         .select("nama")
@@ -273,42 +306,55 @@ export default function DaftarPage() {
     }
   };
 
-  const tryShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${ORG_NAME} – Grup WhatsApp`,
-          text: `Yuk gabung ke grup WhatsApp ${ORG_NAME}!`,
-          url: WA_GROUP_LINK,
-        });
-      } catch {
-        /* user cancelled */
-      }
+  const handleWelcomeKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") setStep("gallery");
+  };
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  // Progress bar: proportional through gallery slides
+  const progressWidth =
+    step === "gallery"
+      ? `${Math.round(((slide + 1) / (GALLERY.length + 1)) * 100)}%`
+      : step !== "welcome"
+      ? "100%"
+      : "0%";
+
+  const fabBottomClass =
+    step === "form" || step === "success" ? "bottom-25" : "bottom-5";
+
+  // Tap to advance gallery
+  const handleGalleryTap = () => {
+    if (slide < GALLERY.length - 1) {
+      setSlide((s) => s + 1);
     } else {
-      await navigator.clipboard.writeText(WA_GROUP_LINK);
-      toast("Tautan disalin", {
-        description: "Link grup disalin ke clipboard.",
-      });
+      setStep("form");
+      // optional: reset index if user returns later
+      // setSlide(0);
     }
   };
 
-  const handleWelcomeKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") setStep("form");
-  };
-
-  const fabBottomClass = step === "form" || step === "success" ? "bottom-25" : "bottom-5";
+  // Simple image preloading for the next slide (performance)
+  useEffect(() => {
+    if (step !== "gallery") return;
+    const next = slide + 1;
+    if (next < GALLERY.length && typeof window !== "undefined") {
+      const img = new window.Image();
+      img.src = GALLERY[next].src;
+    }
+  }, [step, slide]);
 
   return (
     <>
-      {/* LIGHT background (no big blurs or animated blobs) */}
+      {/* LIGHT background */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-b from-stone-50 via-slate-50 to-stone-100" />
 
-      {/* Progress bar (CSS only, no spring) */}
+      {/* Progress bar */}
       {step !== "welcome" && (
         <div className="fixed top-0 left-0 w-full h-1 bg-slate-200 z-40">
           <div
             className="h-1 bg-rose-700 transition-[width] duration-300 ease-out"
-            style={{ width: step === "form" ? "50%" : "100%" }}
+            style={{ width: progressWidth }}
           />
         </div>
       )}
@@ -325,17 +371,14 @@ export default function DaftarPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
-                onClick={() => setStep("form")}
+                onClick={() => setStep("gallery")}
                 onKeyDown={handleWelcomeKey}
                 role="button"
                 tabIndex={0}
               >
-                {/* Top branding */}
-
-                {/* Welcome text */}
                 <div className="px-2">
                   <div className="flex flex-col items-center">
-                    <Image
+                    <NextImage
                       src="/kmb-logo.png"
                       alt={`${ORG_NAME} Logo`}
                       width={96}
@@ -366,20 +409,128 @@ export default function DaftarPage() {
                       className={`mt-3 rounded-xl h-11 px-5 ${PRIMARY}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setStep("form");
+                        setStep("gallery");
                       }}
                     >
-                      Mulai Pendaftaran
+                      Lihat Kegiatan
                     </Button>
                   </div>
                   <p className="text-[13px] text-slate-600 mt-3 mb-8">
                     *Tap di mana saja untuk melanjutkan
                   </p>
                 </div>
-
-                {/* Hint to continue (tiny motion only) */}
               </motion.div>
             )}
+
+            {/* ——— GALLERY (tap to advance) ——— */}
+{step === "gallery" && (
+  <motion.div
+    key="gallery"
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -8 }}
+    transition={{ duration: 0.2 }}
+    className="pt-16 pb-28"
+  >
+    <header className="mb-4 text-center">
+      <BrandChip />
+      <h1 className="text-[22px] font-semibold tracking-tight text-rose-900 mt-3">
+        Sekilas Kegiatan
+      </h1>
+      <p className="text-sm text-slate-600">Tap layar untuk lanjut ke foto berikutnya.</p>
+    </header>
+
+    {/* FULL-BLEED, NO WHITE CARD, SQUARE 1:1 */}
+    <div
+      onClick={handleGalleryTap}
+      role="button"
+      aria-label="Tap untuk lanjut"
+      className="select-none"
+    >
+      {/* premium gradient border */}
+      <div className="p-[1px] rounded-[28px] bg-[conic-gradient(from_180deg_at_50%_50%,#fda4af,#fde68a,#a7f3d0,#93c5fd,#fda4af)] shadow-[0_10px_30px_rgba(0,0,0,.07)]">
+        {/* inner surface */}
+        <div className="relative rounded-[27px] overflow-hidden bg-gradient-to-br from-rose-50 via-amber-50 to-pink-50">
+          {/* top badges */}
+          <div className="absolute z-20 top-3 left-3 right-3 flex items-center justify-between">
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-rose-700 shadow">
+              ✨ Kegiatan KMB
+            </span>
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-600 text-white shadow">
+              {slide + 1}/{GALLERY.length}
+            </span>
+          </div>
+
+          {/* SQUARE VIEWPORT (1:1) */}
+          <motion.div
+            className="relative w-full"
+            style={{ aspectRatio: "1 / 1" }}
+            whileTap={{ scale: 0.985 }}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={slide}
+                className="absolute inset-0"
+                initial={{ opacity: 0, y: 16, scale: 0.985, rotate: -0.3 }}
+                animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, y: -16, scale: 0.99, rotate: 0.3 }}
+                transition={{ duration: 0.26, ease: "easeOut" }}
+              >
+                {/* blurred filler (cover; boleh crop) */}
+                <img
+                  src={GALLERY[slide].src}
+                  alt=""
+                  aria-hidden
+                  className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-40"
+                  loading="eager"
+                  decoding="async"
+                  draggable={false}
+                />
+
+                {/* main image: NO CROP */}
+                <img
+                  src={GALLERY[slide].src}
+                  alt={GALLERY[slide].caption}
+                  loading={slide < 1 ? "eager" : "lazy"}
+                  decoding="async"
+                  draggable={false}
+                  className="absolute inset-0 m-auto w-full h-full object-contain drop-shadow-md"
+                />
+
+                {/* bottom caption */}
+                <div className="absolute z-20 bottom-3 left-3 right-3 flex items-end justify-between">
+                  <div className="text-[11px] text-white/95 bg-black/35 rounded-full px-2 py-1">
+                    Tap untuk lanjut
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* subtle decorative glows (lightweight) */}
+            <div className="pointer-events-none absolute -top-20 -left-20 h-64 w-64 rounded-full bg-rose-200/30 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 rounded-full bg-amber-200/30 blur-3xl" />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* playful dots indicator */}
+      <div className="mt-3 flex items-center justify-center gap-1.5">
+        {GALLERY.map((_, i) => (
+          <div
+            key={i}
+            className={`h-2 rounded-full transition-all ${
+              i === slide
+                ? "w-6 bg-rose-600 shadow-[0_0_0_3px_rgba(255,255,255,.8)]"
+                : "w-2 bg-slate-300"
+            }`}
+            aria-hidden
+          />
+        ))}
+      </div>
+    </div>
+  </motion.div>
+)}
+
 
             {/* ——— FORM ——— */}
             {step === "form" && (
@@ -459,6 +610,37 @@ export default function DaftarPage() {
                         <p className="text-[11px] text-slate-500">
                           Awali dengan <span className="font-mono">08…</span>{" "}
                           atau <span className="font-mono">+62…</span>.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Tanggal Lahir */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label
+                          htmlFor="tanggal_lahir"
+                          className="flex items-center gap-2"
+                        >
+                          <Clock className="w-4 h-4" />
+                          Tanggal Lahir
+                        </Label>
+                        <span className="text-[11px] text-rose-700">Wajib</span>
+                      </div>
+                      <Input
+                        id="tanggal_lahir"
+                        type="date"
+                        max={todayStr}
+                        aria-invalid={!!errors.tanggal_lahir}
+                        {...register("tanggal_lahir")}
+                        className="h-12 rounded-xl"
+                      />
+                      {errors.tanggal_lahir ? (
+                        <p className="text-sm text-destructive">
+                          {errors.tanggal_lahir.message}
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-slate-500">
+                          Format: YYYY-MM-DD.
                         </p>
                       )}
                     </div>
@@ -605,7 +787,7 @@ export default function DaftarPage() {
                 <Card className="shadow-xl rounded-2xl border border-slate-200 bg-white">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2 text-rose-900">
-                      <MessageSquare className="w-5 h-5" />
+                      <MessagesSquare className="w-5 h-5" />
                       Grup WhatsApp {ORG_NAME}
                     </CardTitle>
                   </CardHeader>
@@ -622,6 +804,7 @@ export default function DaftarPage() {
                         Buka WhatsApp Group
                       </a>
                     </Button>
+                    {/* Share button removed as requested */}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -630,7 +813,7 @@ export default function DaftarPage() {
         </div>
       </div>
 
-      {/* Sticky action bars (no backdrop-blur) */}
+      {/* Sticky action bars */}
       {step === "form" && (
         <div
           className="fixed bottom-0 left-0 right-0 z-40 border-t bg-white p-3"
@@ -642,8 +825,9 @@ export default function DaftarPage() {
             <Button
               className={`flex-1 h-12 rounded-xl ${PRIMARY}`}
               onClick={handleSubmit(onSubmit)}
+              disabled={submitting}
             >
-              Daftar Sekarang
+              {submitting ? "Menyimpan..." : "Daftar Sekarang"}
             </Button>
           </div>
         </div>
